@@ -6,7 +6,7 @@ import org.litepal.crud.DataSupport;
  * Created by sivanliu on 2016/12/27.
  */
 
-public class Conuntry extends DataSupport {
+public class County extends DataSupport {
 
     private int id;
     //县的名字

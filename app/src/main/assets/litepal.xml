@@ -1,9 +1,9 @@
 <litepal>
-    <daname value="weather_report" />
+    <dbname value="weather_report" />
     <version value="1" />
     <list>
         <mapping class="android.weatherreport.com.weatherreport.db.City" />
-        <mapping class="android.weatherreport.com.weatherreport.db.Country" />
+        <mapping class="android.weatherreport.com.weatherreport.db.County" />
         <mapping class="android.weatherreport.com.weatherreport.db.Province" />
     </list>
 </litepal>
