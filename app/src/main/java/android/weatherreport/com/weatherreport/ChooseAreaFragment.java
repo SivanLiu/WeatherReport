@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ import okhttp3.Response;
  */
 
 public class ChooseAreaFragment extends Fragment {
+    private static final String TAG = "ChooseAreaFragment";
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
@@ -54,7 +56,7 @@ public class ChooseAreaFragment extends Fragment {
     private List<City> cityList;
 
     //县列表
-    private List<County> countryList;
+    private List<County> countyList;
 
     //选中的省份
     private Province selectedProvince;
@@ -65,14 +67,13 @@ public class ChooseAreaFragment extends Fragment {
     //选中的级别
     private int currentLevel;
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area, container, false);
-        titleText = (TextView) view.findViewById(R.id.title_parent);
+        titleText = (TextView) view.findViewById(R.id.title_text);
         backButton = (Button) view.findViewById(R.id.back_button);
         listView = (ListView) view.findViewById(R.id.list_view);
-        adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, dataList);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
         listView.setAdapter(adapter);
         return view;
     }
@@ -85,9 +86,11 @@ public class ChooseAreaFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 if (currentLevel == LEVEL_PROVINCE) {
                     selectedProvince = provinceList.get(position);
+                    Log.d(TAG, "onActivityCreated: " + selectedProvince);
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
+                    Log.d(TAG, "onActivityCreated: " + selectedCity);
                     queryCounties();
                 }
             }
@@ -129,15 +132,15 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCities() {
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
-        countryList = DataSupport.where("cityid = ?", String.valueOf(selectedProvince.getId())).find(County.class);
-        if (countryList.size() > 0) {
+        cityList = DataSupport.where("provinceid = ?", String.valueOf(selectedProvince.getId())).find(City.class);
+        if (cityList.size() > 0) {
             dataList.clear();
-            for (County county : countryList) {
-                dataList.add(county.getCountyName());
+            for (City city : cityList) {
+                dataList.add(city.getCityName());
             }
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
-            currentLevel = LEVEL_COUNTY;
+            currentLevel = LEVEL_CITY;
         } else {
             int provinceCode = selectedProvince.getProvinceCode();
             String address = "http://guolin.tech/api/china/" + provinceCode;
@@ -150,18 +153,18 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
-        cityList = DataSupport.where("provinceid = ?", String.valueOf(selectedCity.getId())).find(City.class);
-        if (cityList.size() > 0) {
+        countyList = DataSupport.where("cityid = ?", String.valueOf(selectedCity.getId())).find(County.class);
+        if (countyList.size() > 0) {
             dataList.clear();
-            for (City city : cityList) {
-                dataList.add(city.getCityName());
+            for (County county : countyList) {
+                dataList.add(county.getCountyName());
             }
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
-            currentLevel = LEVEL_CITY;
+            currentLevel = LEVEL_COUNTY;
         } else {
             int provinceCode = selectedProvince.getProvinceCode();
-            int cityCode=selectedCity.getCityCode();
+            int cityCode = selectedCity.getCityCode();
             String address = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
             queryFromServer(address, "county");
         }

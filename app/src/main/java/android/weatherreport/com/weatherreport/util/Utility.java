@@ -60,20 +60,22 @@ public class Utility {
 
     //解析和处理服务器返回的县级数据
     public static boolean handleCountryResponse(String response, int cityId) {
-        if (!TextUtils.isEmpty(response)) try {
-            JSONArray allCountries = new JSONArray(response);
-            for (int i = 0; i < allCountries.length(); ++i) {
-                JSONObject countryObject = allCountries.getJSONObject(i);
-                County county = new County();
-                county.setCountyName(countryObject.getString("name"));
-                county.setCityId(countryObject.getInt("id"));
-                county.setCityId(cityId);
-                county.save();
-            }
-            return true;
+        if (!TextUtils.isEmpty(response)) {
+            try {
+                JSONArray allCountries = new JSONArray(response);
+                for (int i = 0; i < allCountries.length(); ++i) {
+                    JSONObject countryObject = allCountries.getJSONObject(i);
+                    County county = new County();
+                    county.setCountyName(countryObject.getString("name"));
+                    county.setCityId(countryObject.getInt("id"));
+                    county.setCityId(cityId);
+                    county.save();
+                }
+                return true;
 
-        } catch (JSONException e) {
-            e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         return false;
     }
