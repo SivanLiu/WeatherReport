@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.weatherreport.com.weatherreport.json.Forecast;
@@ -22,6 +23,8 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
+
+    private static final String TAG = "WeatherActivity";
 
     private ScrollView weatherLayout;
 
@@ -72,9 +75,10 @@ public class WeatherActivity extends AppCompatActivity {
             showWeatherInfo(weather);
         } else {
             //无缓存时去服务器查询天气
-            String weahterId = getIntent().getStringExtra("weather_id");
-            weatherLayout.setVisibility(View.VISIBLE);
-            requestWeather(weahterId);
+            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            Log.d(TAG, "weatherId: " + weatherId);
+            requestWeather(weatherId);
         }
 
     }
@@ -82,6 +86,7 @@ public class WeatherActivity extends AppCompatActivity {
     //根据天气id请求城市天气信息
     private void requestWeather(String weahterId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weahterId + "&key=5f4bd573efa14b49bc0ee05ea39ade30";
+        Log.d(TAG, "weatherUrl: " + weatherUrl);
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -89,7 +94,7 @@ public class WeatherActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(WeatherActivity.this, "获取天气信息失败!", Toast.LENGTH_SHORT).show();
                     }
                 });
 

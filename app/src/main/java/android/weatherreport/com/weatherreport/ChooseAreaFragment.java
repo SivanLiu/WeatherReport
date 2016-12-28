@@ -3,6 +3,7 @@ package android.weatherreport.com.weatherreport;
 import org.litepal.crud.DataSupport;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import android.weatherreport.com.weatherreport.db.City;
 import android.weatherreport.com.weatherreport.db.County;
 import android.weatherreport.com.weatherreport.db.Province;
+import android.weatherreport.com.weatherreport.json.Basic;
 import android.weatherreport.com.weatherreport.util.HttpUtil;
 import android.weatherreport.com.weatherreport.util.Utility;
 import android.widget.AdapterView;
@@ -79,19 +81,23 @@ public class ChooseAreaFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 if (currentLevel == LEVEL_PROVINCE) {
                     selectedProvince = provinceList.get(position);
-                    Log.d(TAG, "onActivityCreated: " + selectedProvince);
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
-                    Log.d(TAG, "onActivityCreated: " + selectedCity);
                     queryCounties();
+                } else if (currentLevel == LEVEL_COUNTY) {
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id", weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
@@ -171,7 +177,6 @@ public class ChooseAreaFragment extends Fragment {
     }
 
     private void queryFromServer(String address, final String type) {
-
         shoProgressDialog();
         HttpUtil.sendOkHttpRequest(address, new Callback() {
             @Override
