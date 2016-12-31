@@ -2,6 +2,7 @@ package android.weatherreport.com.weatherreport;
 
 import com.bumptech.glide.Glide;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.weatherreport.com.weatherreport.json.Forecast;
 import android.weatherreport.com.weatherreport.json.Weather;
+import android.weatherreport.com.weatherreport.service.AutoUpdateService;
 import android.weatherreport.com.weatherreport.util.HttpUtil;
 import android.weatherreport.com.weatherreport.util.Utility;
 import android.widget.Button;
@@ -65,6 +67,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     private ImageView bingPicImg;
 
+    private  String weatherId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,37 +97,33 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
-
-        navButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                drawerLayout.openDrawer(GravityCompat.START);
-            }
-        });
-
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
-
-        final String weatherId;
-
         if (weatherString != null) {
             //有缓存时直接解析天气数据;
             Weather weather = Utility.handleWeatherResponse(weatherString);
             weatherId = weather.basic.weatherId;
+            Log.d(TAG, "有缓存 weatherId: " + weatherId);
             showWeatherInfo(weather);
         } else {
             //无缓存时去服务器查询天气
-
             weatherId = getIntent().getStringExtra("weather_id");
+            Log.d(TAG, "没有缓存 weatherId: " + weatherId);
             weatherLayout.setVisibility(View.INVISIBLE);
-            Log.d(TAG, "weatherId: " + weatherId);
             requestWeather(weatherId);
         }
 
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                Log.d(TAG, "swipe weatherId: " + weatherId);
                 requestWeather(weatherId);
+            }
+        });
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawerLayout.openDrawer(GravityCompat.START);
             }
         });
 
@@ -163,9 +163,8 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     //根据天气id请求城市天气信息
-    public void requestWeather(String weahterId) {
+    public void requestWeather(final String weahterId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weahterId + "&key=5f4bd573efa14b49bc0ee05ea39ade30";
-        Log.d(TAG, "weatherUrl: " + weatherUrl);
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -193,6 +192,7 @@ public class WeatherActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
+                            weatherId=weather.basic.weatherId;
                             showWeatherInfo(weather);
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
@@ -242,5 +242,12 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+
+        if (weather != null && "ok".equals(weather.status)) {
+            Intent intent = new Intent(this, AutoUpdateService.class);
+            startService(intent);
+        } else {
+            Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
+        }
     }
 }
