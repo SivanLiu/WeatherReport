@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -16,6 +18,7 @@ import android.weatherreport.com.weatherreport.json.Forecast;
 import android.weatherreport.com.weatherreport.json.Weather;
 import android.weatherreport.com.weatherreport.util.HttpUtil;
 import android.weatherreport.com.weatherreport.util.Utility;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -32,7 +35,11 @@ public class WeatherActivity extends AppCompatActivity {
 
     private static final String TAG = "WeatherActivity";
 
-    private SwipeRefreshLayout swipeRefresh;
+    public DrawerLayout drawerLayout;
+
+    private Button navButton;
+
+    public SwipeRefreshLayout swipeRefresh;
 
     private ScrollView weatherLayout;
 
@@ -84,7 +91,15 @@ public class WeatherActivity extends AppCompatActivity {
         sportText = (TextView) findViewById(R.id.sport_text);
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        navButton = (Button) findViewById(R.id.nav_button);
 
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
@@ -148,7 +163,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     //根据天气id请求城市天气信息
-    private void requestWeather(String weahterId) {
+    public void requestWeather(String weahterId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weahterId + "&key=5f4bd573efa14b49bc0ee05ea39ade30";
         Log.d(TAG, "weatherUrl: " + weatherUrl);
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
